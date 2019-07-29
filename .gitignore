@@ -1,0 +1,5 @@
+.vscode/*
+venv/*
+*_example.py
+.DS_Store
+__pycache__/*
