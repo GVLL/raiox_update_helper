@@ -3,21 +3,12 @@ import data
 from PySide2.QtWidgets import (QApplication, QDialog, QLineEdit,
     QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog,
     QLabel, QTableView, QCheckBox, QHeaderView)
+from PySide2.QtCore import QThread
 from models import UnitTableModel
-from fuzzywuzzy import fuzz
-import zipfile
+from utils import nearest, compressfile, Status, upload_sheet
 
 
-def nearest(source, candidates):
-    ratio_list = [(fuzz.ratio(source, c), c) for c in candidates]
-    ratio_list.sort()
-    return ratio_list[-1][1]
-
-def compressfile(filename, compressed_name):
-    jungle_zip = zipfile.ZipFile(compressed_name, 'w')
-    jungle_zip.write(filename, compress_type=zipfile.ZIP_DEFLATED)
-    jungle_zip.close()
-    return compressed_name
+HEADER = ['No Servidor', 'Arquivo encontrado', 'Confere?']
 
 class MainForm(QDialog):
     def __init__(self, datalist, header, parent=None):
@@ -77,9 +68,9 @@ class MainForm(QDialog):
 
     def update_model(self, folder):
         filenames = os.listdir(folder)
-        datalist = [(unit, nearest(unit, filenames), QCheckBox()) for unit in data.units]
-        self.table_model2 = UnitTableModel(self, datalist, ['No Servidor', 'Arquivo encontrado', 'Confere?'])
-        self.table_view.setModel(self.table_model2)
+        self.datalist = [(unit, nearest(unit, filenames), QCheckBox()) for unit in data.units]
+        self.table_model = UnitTableModel(self, self.datalist, HEADER)
+        self.table_view.setModel(self.table_model)
         self.table_view.update()
             
     def select_folder(self):
@@ -93,11 +84,16 @@ class MainForm(QDialog):
     def compress_files(self):
         files_dir = self.folder_address_input.text()
         for row in self.datalist:
-            print("Compressing file".format(row[1]))
+            print("Compressing file {}".format(row[1]))
             compressfile(os.path.join(files_dir, row[1]), os.path.join(files_dir, row[0]))
     
     def upload_files(self):
-        print("Uploading files to server")
+        files_dir = self.folder_address_input.text()
+        for count, row in enumerate(self.datalist):
+            print("Uploading file {}".format(row[0]))
+            # TODO: read year from UI (combobox?)
+            upload_sheet(os.path.join(files_dir, row[0]), 2019)
+            self.table_model.update_row_status(count, Status.SENT)
         print("Files uploaded")
 
     def update(self):

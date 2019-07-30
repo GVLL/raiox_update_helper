@@ -1,6 +1,8 @@
 # code based on sample available at:
 # https://gist.github.com/345161974/dd5003ed9b706adc557ee12e6a344c6e
 from PySide2.QtCore import *
+from PySide2.QtGui import QBrush
+from utils import Status
 
 CHECK_COLUMN_INDEX = 2
 
@@ -13,6 +15,7 @@ class UnitTableModel(QAbstractTableModel):
         QAbstractTableModel.__init__(self, parent, *args)
         self.mylist = mylist
         self.header = header
+        self.status_list = [Status.NEUTRAL for i in self.mylist]
 
     def setDataList(self, mylist):
         self.mylist = mylist
@@ -44,6 +47,17 @@ class UnitTableModel(QAbstractTableModel):
                     return Qt.Checked
                 else:
                     return Qt.Unchecked
+        elif role == Qt.BackgroundRole:      # <---------
+            if self.status_list[index.row()] == Status.SENT:
+                return QBrush(Qt.blue) if index.row()%2==0 else QBrush(Qt.cyan)
+            elif self.status_list[index.row()] == Status.ERROR:
+                return QBrush(Qt.red)
+            else:
+                return None
+
+    def update_row_status(self, pos, status):
+        self.status_list[pos] = status
+        self.dataChanged.emit(self.createIndex(pos, 0), self.createIndex(pos, 2), [Qt.BackgroundRole])
 
     def headerData(self, col, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:

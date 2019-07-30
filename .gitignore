@@ -3,3 +3,4 @@ venv/*
 *_example.py
 .DS_Store
 __pycache__/*
+*adminsdk*.json
