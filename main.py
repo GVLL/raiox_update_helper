@@ -5,11 +5,19 @@ from PySide2.QtWidgets import (QApplication, QDialog, QLineEdit,
     QLabel, QTableView, QCheckBox, QHeaderView)
 from models import UnitTableModel
 from fuzzywuzzy import fuzz
+import zipfile
+
 
 def nearest(source, candidates):
     ratio_list = [(fuzz.ratio(source, c), c) for c in candidates]
     ratio_list.sort()
     return ratio_list[-1][1]
+
+def compressfile(filename, compressed_name):
+    jungle_zip = zipfile.ZipFile(compressed_name, 'w')
+    jungle_zip.write(filename, compress_type=zipfile.ZIP_DEFLATED)
+    jungle_zip.close()
+    return compressed_name
 
 class MainForm(QDialog):
     def __init__(self, datalist, header, parent=None):
@@ -38,6 +46,7 @@ class MainForm(QDialog):
             layout.addLayout(hlayout)
             
             # tabela
+            self.datalist = datalist
             self.table_model = UnitTableModel(self, datalist, header)
             self.table_view = QTableView()
             #self.table_view.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -83,8 +92,9 @@ class MainForm(QDialog):
     
     def compress_files(self):
         files_dir = self.folder_address_input.text()
-        print("Compressing files on {}".format(files_dir))
-        print("Files compressed")
+        for row in self.datalist:
+            print("Compressing file".format(row[1]))
+            compressfile(os.path.join(files_dir, row[1]), os.path.join(files_dir, row[0]))
     
     def upload_files(self):
         print("Uploading files to server")
@@ -95,11 +105,6 @@ class MainForm(QDialog):
         self.compress_files()
         self.upload_files()
         print("Update completed")
-
-    # def update_model(self, datalist, header):
-    #     self.table_model2 = MyTableModel(self, dataList, header)
-    #     self.table_view.setModel(self.table_model2)
-    #     self.table_view.update()
 
 
 app = QApplication([])
