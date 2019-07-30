@@ -1,8 +1,15 @@
 import os
+import data
 from PySide2.QtWidgets import (QApplication, QDialog, QLineEdit,
     QPushButton, QVBoxLayout, QHBoxLayout, QFileDialog,
     QLabel, QTableView, QCheckBox, QHeaderView)
 from models import UnitTableModel
+from fuzzywuzzy import fuzz
+
+def nearest(source, candidates):
+    ratio_list = [(fuzz.ratio(source, c), c) for c in candidates]
+    ratio_list.sort()
+    return ratio_list[-1][1]
 
 class MainForm(QDialog):
     def __init__(self, datalist, header, parent=None):
@@ -59,13 +66,20 @@ class MainForm(QDialog):
         # display in title bar for convenience
         self.setWindowTitle(sf)
 
+    def update_model(self, folder):
+        filenames = os.listdir(folder)
+        datalist = [(unit, nearest(unit, filenames), QCheckBox()) for unit in data.units]
+        self.table_model2 = UnitTableModel(self, datalist, ['No Servidor', 'Arquivo encontrado', 'Confere?'])
+        self.table_view.setModel(self.table_model2)
+        self.table_view.update()
             
     def select_folder(self):
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.Directory)
         if dialog.exec_():
-            filenames = dialog.selectedFiles()
-            self.folder_address_input.setText(filenames[0])
+            selected_dir = dialog.selectedFiles()[0]
+            self.folder_address_input.setText(selected_dir)
+            self.update_model(selected_dir)
     
     def compress_files(self):
         files_dir = self.folder_address_input.text()
@@ -91,20 +105,9 @@ class MainForm(QDialog):
 app = QApplication([])
 
 header = ['No Servidor', 'Arquivo encontrado', 'Confere?']
-datalist = [
-    ('Camara Municipal do Rio de Janeiro', 
-        'Câmara Municipal', 
-        QCheckBox()
-    ),
-    ('Secretaria Municipal de Saude', 
-        'Secretaria Municipal de Sa&de', 
-        QCheckBox()
-    ),
-    ('Secretaria Municipal de Educacao', 
-        'Secretaria Municipal de EducasSáum', 
-        QCheckBox()
-    ),
-]
+fake_units = data.units
+datalist = [(unit, "---", QCheckBox("!")) for unit in data.units]
+
 form = MainForm(datalist, header)
 form.show()
 app.exec_()
