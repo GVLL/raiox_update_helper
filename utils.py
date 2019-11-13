@@ -5,7 +5,8 @@ from firebase_admin import credentials
 from firebase_admin import storage
 
 SHEETS_PATH = 'sheets'
-default_app = firebase_admin.initialize_app(cred)
+# cred = credentials.RefreshToken('/Users/hallpaz/Workspace/qt_env/raiox_upload/raiox-do-orcamento-firebase-adminsdk-d9lx9-5e5939ab53.json')
+default_app = firebase_admin.initialize_app()
 
 def test_upload_sheet(filepath, year):
     bucket_name = '{0}.appspot.com'.format(default_app.project_id)

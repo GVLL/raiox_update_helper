@@ -9,7 +9,7 @@ from utils import nearest, compressfile, Status, upload_sheet
 
 
 HEADER = ['No Servidor', 'Arquivo encontrado', 'Confere?']
-
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'raiox-do-orcamento-firebase-adminsdk-d9lx9-5e5939ab53.json'
 class MainForm(QDialog):
     def __init__(self, datalist, header, parent=None):
             super(MainForm, self).__init__(parent)
